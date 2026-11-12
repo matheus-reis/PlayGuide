@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <title>PlayGuide</title>
+  <meta name="theme-color" content="#0b0b0c">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="PlayGuide">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Repertório -->
+  <section id="v-list" class="view active">
+    <header class="bar">
+      <h1>Repertório</h1>
+      <button id="l-menu" class="ghost">⋯</button>
+    </header>
+    <ul id="songs" class="songs"></ul>
+    <div id="l-empty" class="empty">Nenhuma música ainda.<br>Toque em <b>+ Nova música</b> para começar.</div>
+    <div id="l-tools" class="tools hidden">
+      <button id="l-export">Exportar backup</button>
+      <label class="btn">Importar backup<input id="l-import" type="file" accept="application/json,.json" hidden></label>
+    </div>
+    <footer class="foot">
+      <button id="l-new" class="primary">+ Nova música</button>
+    </footer>
+  </section>
+
+  <!-- Editor -->
+  <section id="v-edit" class="view">
+    <header class="bar">
+      <button id="e-back" class="ghost">‹ Voltar</button>
+      <h1>Guia</h1>
+      <button id="e-save" class="ghost strong">Salvar</button>
+    </header>
+    <div class="form">
+      <input id="e-title" type="text" placeholder="Nome da música" autocomplete="off">
+      <textarea id="e-text" spellcheck="false" placeholder="Uma linha por trecho. Tempo opcional na frente:
+
+0:00 Intro – G D Em C
+0:12 Verso 1
+0:40 Pré-refrão
+0:55 Refrão 2x
+1:25 Solo guitarra
+
+Sem tempos? Escreva só os trechos e use &quot;Gravar tempos&quot;."></textarea>
+      <p class="hint">Uma linha = um trecho. Tempo no formato <b>m:ss</b> (opcional).</p>
+      <div class="row">
+        <button id="e-rec">● Gravar tempos</button>
+        <button id="e-del" class="danger">Excluir</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Prompter -->
+  <section id="v-play" class="view">
+    <header class="bar">
+      <button id="p-back" class="ghost">‹</button>
+      <div class="ptitle"><span id="p-title"></span><small id="p-count"></small></div>
+      <div id="p-time" class="time">0:00</div>
+    </header>
+    <div id="stage" class="stage">
+      <div id="p-prev" class="line dim"></div>
+      <div id="p-cur" class="line cur">
+        <div id="p-cur-text"></div>
+        <div class="prog"><i id="p-prog"></i></div>
+      </div>
+      <div id="p-next" class="line dim"></div>
+    </div>
+    <footer class="controls">
+      <button id="p-prevsong" title="Música anterior">⏮<small>música</small></button>
+      <button id="p-secback" title="Trecho anterior">◀<small>trecho</small></button>
+      <button id="p-play" class="play">▶</button>
+      <button id="p-secnext" title="Próximo trecho">▶<small>trecho</small></button>
+      <button id="p-nextsong" title="Próxima música">⏭<small>música</small></button>
+    </footer>
+    <button id="p-reset" class="reset">↺ zerar</button>
+  </section>
+
+  <!-- Gravar tempos -->
+  <section id="v-rec" class="view">
+    <header class="bar">
+      <button id="r-cancel" class="ghost">Cancelar</button>
+      <h1 id="r-title">Gravar</h1>
+      <div id="r-time" class="time">0:00</div>
+    </header>
+    <p class="hint pad">Dê play na música (Spotify, YouTube…) e toque no botão sempre que um trecho começar.</p>
+    <ol id="r-list" class="rlist"></ol>
+    <footer class="foot col">
+      <button id="r-tap" class="primary huge">Começar</button>
+      <div class="row">
+        <button id="r-undo">Desfazer</button>
+        <button id="r-save" class="strong">Salvar</button>
+      </div>
+    </footer>
+  </section>
+
+  <script src="app.js"></script>
+</body>
+</html>
