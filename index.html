@@ -16,18 +16,39 @@
 </head>
 <body>
 
-  <!-- Repertório -->
-  <section id="v-list" class="view active">
+  <!-- Repertórios -->
+  <section id="v-sets" class="view active">
     <header class="bar">
-      <h1>Repertório</h1>
+      <h1>Repertórios</h1>
+      <button id="s-menu" class="ghost">⋯</button>
+    </header>
+    <div id="s-tools" class="tools hidden">
+      <button id="s-export">Exportar backup</button>
+      <label class="btn">Importar backup<input id="s-import" type="file" accept="application/json,.json" hidden></label>
+    </div>
+    <ul id="sets" class="songs"></ul>
+    <div id="s-empty" class="empty">Nenhum repertório ainda.<br>Toque em <b>+ Novo repertório</b> para começar.</div>
+    <footer class="foot">
+      <button id="s-new" class="primary">+ Novo repertório</button>
+    </footer>
+  </section>
+
+  <!-- Músicas do repertório -->
+  <section id="v-list" class="view">
+    <header class="bar">
+      <button id="l-back" class="ghost">‹ Repertórios</button>
       <button id="l-menu" class="ghost">⋯</button>
     </header>
-    <ul id="songs" class="songs"></ul>
-    <div id="l-empty" class="empty">Nenhuma música ainda.<br>Toque em <b>+ Nova música</b> para começar.</div>
-    <div id="l-tools" class="tools hidden">
-      <button id="l-export">Exportar backup</button>
-      <label class="btn">Importar backup<input id="l-import" type="file" accept="application/json,.json" hidden></label>
+    <div class="meta">
+      <input id="l-title" class="title-input" type="text" placeholder="Nome do repertório" autocomplete="off">
+      <input id="l-date" type="date">
     </div>
+    <div id="l-tools" class="tools hidden">
+      <button id="l-dup">Duplicar repertório</button>
+      <button id="l-del" class="danger">Excluir repertório</button>
+    </div>
+    <ul id="songs" class="songs"></ul>
+    <div id="l-empty" class="empty">Nenhuma música neste repertório.<br>Toque em <b>+ Nova música</b> para começar.</div>
     <footer class="foot">
       <button id="l-new" class="primary">+ Nova música</button>
     </footer>

@@ -1,16 +1,27 @@
 'use strict';
 
 const $ = (s) => document.querySelector(s);
-const KEY = 'playguide.songs.v1';
+const KEY = 'playguide.sets.v1';
+const OLD_KEY = 'playguide.songs.v1';
 
 // ---------- Dados ----------
-let songs = load();
+// sets = [{ title, date: 'AAAA-MM-DD', songs: [{ title, text }] }]
+let sets = load();
+let setIdx = -1;
+let songs = []; // músicas do repertório aberto (mesma referência de sets[setIdx].songs)
 
 function load() {
-  try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch { return []; }
+  try {
+    const data = JSON.parse(localStorage.getItem(KEY));
+    if (Array.isArray(data)) return data;
+    // migra a lista única da versão anterior
+    const old = JSON.parse(localStorage.getItem(OLD_KEY));
+    if (Array.isArray(old) && old.length) return [{ title: 'Minhas músicas', date: today(), songs: old }];
+  } catch { /* dados corrompidos */ }
+  return [];
 }
 function save() {
-  localStorage.setItem(KEY, JSON.stringify(songs));
+  localStorage.setItem(KEY, JSON.stringify(sets));
 }
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist();
 
@@ -39,6 +50,26 @@ function fmt(sec) {
   return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
 }
 
+function today() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function fmtDate(iso) {
+  if (!iso) return 'sem data';
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+// Confirmação com segundo toque (evita diálogos nativos)
+function confirmTap(btn, action) {
+  if (btn.dataset.confirm) { action(); return; }
+  const label = btn.textContent;
+  btn.dataset.confirm = '1';
+  btn.textContent = 'Toque de novo para confirmar';
+  setTimeout(() => { delete btn.dataset.confirm; btn.textContent = label; }, 2500);
+}
+
 function esc(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
@@ -48,7 +79,107 @@ function show(id) {
   document.querySelectorAll('.view').forEach((v) => v.classList.toggle('active', v.id === id));
 }
 
-// ---------- Repertório ----------
+// ---------- Repertórios ----------
+// Próximos (a partir de hoje) em ordem crescente, depois os passados do mais recente ao mais antigo.
+function sortedSetIndexes() {
+  const t = today();
+  return sets.map((s, i) => i).sort((a, b) => {
+    const da = sets[a].date || '', db = sets[b].date || '';
+    const fa = da >= t, fb = db >= t;
+    if (fa !== fb) return fa ? -1 : 1;
+    return fa ? da.localeCompare(db) : db.localeCompare(da);
+  });
+}
+
+function renderSets() {
+  const t = today();
+  $('#sets').innerHTML = sortedSetIndexes().map((i) => {
+    const s = sets[i];
+    const n = s.songs.length;
+    const when = s.date === t ? '<b>Hoje</b> · ' : '';
+    return `<li data-i="${i}" class="${s.date && s.date < t ? 'past' : ''}">
+      <button class="open">${esc(s.title || 'Sem nome')}<small>${when}${fmtDate(s.date)} · ${n} ${n === 1 ? 'música' : 'músicas'}</small></button>
+    </li>`;
+  }).join('');
+}
+
+function openSet(i) {
+  setIdx = i;
+  songs = sets[i].songs;
+  $('#l-title').value = sets[i].title;
+  $('#l-date').value = sets[i].date || '';
+  $('#l-tools').classList.add('hidden');
+  renderList();
+  show('v-list');
+}
+
+function goSets() {
+  renderSets();
+  show('v-sets');
+}
+
+$('#sets').addEventListener('click', (e) => {
+  const li = e.target.closest('li');
+  if (li) openSet(+li.dataset.i);
+});
+
+$('#s-new').onclick = () => {
+  sets.push({ title: '', date: today(), songs: [] });
+  save();
+  openSet(sets.length - 1);
+  $('#l-title').focus();
+};
+
+$('#s-menu').onclick = () => $('#s-tools').classList.toggle('hidden');
+
+$('#s-export').onclick = () => {
+  const blob = new Blob([JSON.stringify(sets, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `playguide-${today()}.json`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+};
+
+$('#s-import').onchange = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    let data = JSON.parse(await file.text());
+    if (!Array.isArray(data)) throw new Error();
+    // aceita também o backup antigo (lista simples de músicas)
+    if (data.length && !Array.isArray(data[0].songs)) data = [{ title: 'Importado', date: today(), songs: data }];
+    const cleanSong = (m) => ({ title: String(m.title || ''), text: String(m.text || '') });
+    sets = data.map((s) => ({ title: String(s.title || ''), date: String(s.date || ''), songs: (s.songs || []).map(cleanSong) }));
+    save();
+    renderSets();
+  } catch {
+    $('#s-empty').textContent = 'Arquivo de backup inválido.';
+  }
+  e.target.value = '';
+};
+
+// ---------- Músicas do repertório ----------
+$('#l-title').oninput = () => { sets[setIdx].title = $('#l-title').value; save(); };
+$('#l-date').onchange = () => { sets[setIdx].date = $('#l-date').value; save(); };
+$('#l-back').onclick = goSets;
+$('#l-menu').onclick = () => $('#l-tools').classList.toggle('hidden');
+
+$('#l-dup').onclick = () => {
+  const copy = JSON.parse(JSON.stringify(sets[setIdx]));
+  copy.title = `${copy.title || 'Sem nome'} (cópia)`;
+  sets.push(copy);
+  save();
+  openSet(sets.length - 1);
+  $('#l-title').focus();
+};
+
+$('#l-del').onclick = () => confirmTap($('#l-del'), () => {
+  sets.splice(setIdx, 1);
+  save();
+  goSets();
+});
+
 function renderList() {
   $('#songs').innerHTML = songs.map((s, i) => {
     const secs = parse(s.text);
@@ -76,31 +207,6 @@ $('#songs').addEventListener('click', (e) => {
 });
 
 $('#l-new').onclick = () => openEditor(-1);
-$('#l-menu').onclick = () => $('#l-tools').classList.toggle('hidden');
-
-$('#l-export').onclick = () => {
-  const blob = new Blob([JSON.stringify(songs, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `playguide-${new Date().toISOString().slice(0, 10)}.json`;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-};
-
-$('#l-import').onchange = async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  try {
-    const data = JSON.parse(await file.text());
-    if (!Array.isArray(data)) throw new Error();
-    songs = data.map((s) => ({ title: String(s.title || ''), text: String(s.text || '') }));
-    save();
-    renderList();
-  } catch {
-    $('#l-empty').textContent = 'Arquivo de backup inválido.';
-  }
-  e.target.value = '';
-};
 
 // ---------- Editor ----------
 let editing = -1;
@@ -123,19 +229,12 @@ function commitEditor() {
 
 $('#e-back').onclick = () => { renderList(); show('v-list'); };
 $('#e-save').onclick = () => { commitEditor(); renderList(); show('v-list'); };
-$('#e-del').onclick = () => {
-  if (editing >= 0 && $('#e-del').dataset.confirm) {
-    songs.splice(editing, 1);
-    save();
-    renderList();
-    show('v-list');
-  } else {
-    // segundo toque confirma (evita diálogos nativos)
-    $('#e-del').dataset.confirm = '1';
-    $('#e-del').textContent = 'Toque de novo para excluir';
-    setTimeout(() => { delete $('#e-del').dataset.confirm; $('#e-del').textContent = 'Excluir'; }, 2500);
-  }
-};
+$('#e-del').onclick = () => confirmTap($('#e-del'), () => {
+  songs.splice(editing, 1);
+  save();
+  renderList();
+  show('v-list');
+});
 $('#e-rec').onclick = () => {
   if (!parse($('#e-text').value).length) { $('#e-text').focus(); return; }
   commitEditor();
@@ -373,7 +472,10 @@ $('#r-save').onclick = () => {
 $('#r-cancel').onclick = () => { finishRec(); openEditor(rec.i); };
 
 // ---------- Início ----------
-renderList();
+// Abre direto o repertório de hoje, se existir.
+renderSets();
+const todayIdx = sets.findIndex((s) => s.date === today());
+if (todayIdx >= 0) openSet(todayIdx);
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js');
