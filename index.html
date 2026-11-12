@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
   <title>PlayGuide</title>
-  <meta name="theme-color" content="#0b0b0c">
+  <meta name="theme-color" content="#09090b">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -16,109 +16,143 @@
 </head>
 <body>
 
+  <!-- Ícones -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+    <symbol id="i-forward" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+    <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="4.5" width="4" height="15" rx="1" fill="currentColor"/><rect x="14" y="4.5" width="4" height="15" rx="1" fill="currentColor"/></symbol>
+    <symbol id="i-skip-back" viewBox="0 0 24 24"><path d="M19 20 9 12l10-8z" fill="currentColor"/><path d="M5 19V5"/></symbol>
+    <symbol id="i-skip-forward" viewBox="0 0 24 24"><path d="m5 4 10 8-10 8z" fill="currentColor"/><path d="M19 5v14"/></symbol>
+    <symbol id="i-reset" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></symbol>
+    <symbol id="i-record" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" fill="currentColor"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+    <symbol id="i-up" viewBox="0 0 24 24"><path d="m5 12 7-7 7 7M12 19V5"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></symbol>
+    <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  </svg>
+
   <!-- Repertórios -->
   <section id="v-sets" class="view active">
-    <header class="bar">
-      <h1>Repertórios</h1>
-      <button id="s-menu" class="ghost">⋯</button>
+    <header class="appbar">
+      <h1 class="appbar__title appbar__title--large">Repertórios</h1>
+      <button id="s-menu" class="btn btn--icon btn--ghost" aria-label="Mais opções"><svg class="i"><use href="#i-more"/></svg></button>
     </header>
-    <div id="s-tools" class="tools hidden">
-      <button id="s-export">Exportar backup</button>
-      <label class="btn">Importar backup<input id="s-import" type="file" accept="application/json,.json" hidden></label>
+    <div id="s-tools" class="toolbar hidden">
+      <button id="s-export" class="btn btn--secondary btn--sm"><svg class="i"><use href="#i-download"/></svg>Exportar backup</button>
+      <label class="btn btn--secondary btn--sm"><svg class="i"><use href="#i-upload"/></svg>Importar backup<input id="s-import" type="file" accept="application/json,.json" hidden></label>
     </div>
-    <ul id="sets" class="songs"></ul>
-    <div id="s-empty" class="empty">Nenhum repertório ainda.<br>Toque em <b>+ Novo repertório</b> para começar.</div>
-    <footer class="foot">
-      <button id="s-new" class="primary">+ Novo repertório</button>
+    <div class="content">
+      <ul id="sets" class="list"></ul>
+      <div id="s-empty" class="empty">Nenhum repertório ainda.<br>Toque em <b>Novo repertório</b> para começar.</div>
+    </div>
+    <footer class="footer">
+      <button id="s-new" class="btn btn--primary btn--grow"><svg class="i"><use href="#i-plus"/></svg>Novo repertório</button>
     </footer>
   </section>
 
   <!-- Músicas do repertório -->
   <section id="v-list" class="view">
-    <header class="bar">
-      <button id="l-back" class="ghost">‹ Repertórios</button>
-      <button id="l-menu" class="ghost">⋯</button>
+    <header class="appbar">
+      <button id="l-back" class="btn btn--ghost btn--back"><svg class="i"><use href="#i-back"/></svg>Repertórios</button>
+      <span class="appbar__title"></span>
+      <button id="l-menu" class="btn btn--icon btn--ghost" aria-label="Mais opções"><svg class="i"><use href="#i-more"/></svg></button>
     </header>
-    <div class="meta">
-      <input id="l-title" class="title-input" type="text" placeholder="Nome do repertório" autocomplete="off">
-      <input id="l-date" type="date">
+    <div id="l-tools" class="toolbar hidden">
+      <button id="l-dup" class="btn btn--secondary btn--sm"><svg class="i"><use href="#i-copy"/></svg>Duplicar</button>
+      <button id="l-del" class="btn btn--danger btn--sm"><svg class="i"><use href="#i-trash"/></svg>Excluir repertório</button>
     </div>
-    <div id="l-tools" class="tools hidden">
-      <button id="l-dup">Duplicar repertório</button>
-      <button id="l-del" class="danger">Excluir repertório</button>
+    <div class="content">
+      <div class="meta">
+        <label class="label meta__name">Nome<input id="l-title" class="field field--lg" type="text" placeholder="Ex.: Cantata de Natal" autocomplete="off"></label>
+        <label class="label">Data<input id="l-date" class="field field--lg" type="date"></label>
+      </div>
+      <div class="section-head"><h2 class="section-title">Músicas</h2></div>
+      <ul id="songs" class="list"></ul>
+      <div id="l-empty" class="empty">Nenhuma música neste repertório.</div>
     </div>
-    <ul id="songs" class="songs"></ul>
-    <div id="l-empty" class="empty">Nenhuma música neste repertório.<br>Toque em <b>+ Nova música</b> para começar.</div>
-    <footer class="foot">
-      <button id="l-new" class="primary">+ Nova música</button>
+    <footer class="footer">
+      <button id="l-new" class="btn btn--secondary"><svg class="i"><use href="#i-plus"/></svg>Música</button>
+      <button id="l-play" class="btn btn--primary btn--grow"><svg class="i"><use href="#i-play"/></svg>Tocar repertório</button>
     </footer>
   </section>
 
-  <!-- Editor -->
+  <!-- Editor de música -->
   <section id="v-edit" class="view">
-    <header class="bar">
-      <button id="e-back" class="ghost">‹ Voltar</button>
-      <h1>Guia</h1>
-      <button id="e-save" class="ghost strong">Salvar</button>
+    <header class="appbar">
+      <button id="e-back" class="btn btn--ghost btn--back"><svg class="i"><use href="#i-back"/></svg>Músicas</button>
+      <span class="appbar__title"></span>
+      <button id="e-done" class="btn btn--ghost btn--accent">OK</button>
     </header>
-    <div class="form">
-      <input id="e-title" type="text" placeholder="Nome da música" autocomplete="off">
-      <textarea id="e-text" spellcheck="false" placeholder="Uma linha por trecho. Tempo opcional na frente:
-
-0:00 Intro – G D Em C
-0:12 Verso 1
-0:40 Pré-refrão
-0:55 Refrão 2x
-1:25 Solo guitarra
-
-Sem tempos? Escreva só os trechos e use &quot;Gravar tempos&quot;."></textarea>
-      <p class="hint">Uma linha = um trecho. Tempo no formato <b>m:ss</b> (opcional).</p>
-      <div class="row">
-        <button id="e-rec">● Gravar tempos</button>
-        <button id="e-del" class="danger">Excluir</button>
+    <div class="content">
+      <label class="label">Nome da música<input id="e-title" class="field field--lg" type="text" placeholder="Ex.: Noite Feliz" autocomplete="off"></label>
+      <div class="section-head">
+        <h2 class="section-title">Trechos <span id="e-count" class="section-count"></span></h2>
+        <span class="section-hint">tempo · nome</span>
       </div>
+      <ol id="e-secs" class="sec-list"></ol>
+      <div id="e-chips" class="chips"></div>
+      <p class="hint">No tempo, digite só os números: <b>125</b> vira <b>1:25</b>.<br>Não sabe os tempos? Deixe em branco e use <b>Gravar tempos</b>.</p>
     </div>
+    <footer class="footer">
+      <button id="e-del" class="btn btn--danger"><svg class="i"><use href="#i-trash"/></svg>Excluir</button>
+      <button id="e-rec" class="btn btn--secondary btn--grow"><svg class="i i--rec"><use href="#i-record"/></svg>Gravar tempos</button>
+    </footer>
   </section>
 
   <!-- Prompter -->
   <section id="v-play" class="view">
-    <header class="bar">
-      <button id="p-back" class="ghost">‹</button>
-      <div class="ptitle"><span id="p-title"></span><small id="p-count"></small></div>
-      <div id="p-time" class="time">0:00</div>
+    <header class="appbar">
+      <button id="p-back" class="btn btn--icon btn--ghost" aria-label="Voltar"><svg class="i"><use href="#i-back"/></svg></button>
+      <div class="appbar__center">
+        <span id="p-title" class="appbar__title"></span>
+        <span id="p-count" class="appbar__sub"></span>
+      </div>
+      <span id="p-time" class="timer">0:00</span>
     </header>
     <div id="stage" class="stage">
-      <div id="p-prev" class="line dim"></div>
-      <div id="p-cur" class="line cur">
-        <div id="p-cur-text"></div>
-        <div class="prog"><i id="p-prog"></i></div>
+      <div id="p-prev" class="cue cue--dim"></div>
+      <div id="p-cur" class="cue cue--live">
+        <span id="p-cur-text"></span>
+        <span class="cue__progress"><i id="p-prog"></i></span>
       </div>
-      <div id="p-next" class="line dim"></div>
+      <div id="p-next" class="cue cue--dim"></div>
     </div>
-    <footer class="controls">
-      <button id="p-prevsong" title="Música anterior">⏮<small>música</small></button>
-      <button id="p-secback" title="Trecho anterior">◀<small>trecho</small></button>
-      <button id="p-play" class="play">▶</button>
-      <button id="p-secnext" title="Próximo trecho">▶<small>trecho</small></button>
-      <button id="p-nextsong" title="Próxima música">⏭<small>música</small></button>
+    <footer class="transport">
+      <button id="p-prevsong" class="tbtn" aria-label="Música anterior"><svg class="i"><use href="#i-skip-back"/></svg><small>Música</small></button>
+      <button id="p-secback" class="tbtn" aria-label="Trecho anterior"><svg class="i"><use href="#i-back"/></svg><small>Trecho</small></button>
+      <button id="p-play" class="tbtn tbtn--play" aria-label="Tocar ou pausar"><svg class="i"><use href="#i-play"/></svg></button>
+      <button id="p-secnext" class="tbtn" aria-label="Próximo trecho"><svg class="i"><use href="#i-forward"/></svg><small>Trecho</small></button>
+      <button id="p-nextsong" class="tbtn" aria-label="Próxima música"><svg class="i"><use href="#i-skip-forward"/></svg><small>Música</small></button>
     </footer>
-    <button id="p-reset" class="reset">↺ zerar</button>
+    <div class="footer footer--plain">
+      <button id="p-reset" class="btn btn--ghost btn--sm btn--muted"><svg class="i"><use href="#i-reset"/></svg>Zerar tempo</button>
+    </div>
   </section>
 
   <!-- Gravar tempos -->
   <section id="v-rec" class="view">
-    <header class="bar">
-      <button id="r-cancel" class="ghost">Cancelar</button>
-      <h1 id="r-title">Gravar</h1>
-      <div id="r-time" class="time">0:00</div>
+    <header class="appbar">
+      <button id="r-cancel" class="btn btn--ghost btn--accent">Cancelar</button>
+      <span id="r-title" class="appbar__title"></span>
+      <span id="r-time" class="timer">0:00</span>
     </header>
-    <p class="hint pad">Dê play na música (Spotify, YouTube…) e toque no botão sempre que um trecho começar.</p>
-    <ol id="r-list" class="rlist"></ol>
-    <footer class="foot col">
-      <button id="r-tap" class="primary huge">Começar</button>
-      <div class="row">
-        <button id="r-undo">Desfazer</button>
-        <button id="r-save" class="strong">Salvar</button>
+    <p class="hint hint--pad">Dê play na música (Spotify, YouTube…) e toque no botão verde sempre que um trecho começar.</p>
+    <div class="content">
+      <ol id="r-list" class="rec-list"></ol>
+    </div>
+    <footer class="footer footer--col">
+      <button id="r-tap" class="btn btn--primary btn--xl">Começar</button>
+      <div class="footer__row">
+        <button id="r-undo" class="btn btn--secondary"><svg class="i"><use href="#i-undo"/></svg>Desfazer</button>
+        <button id="r-save" class="btn btn--secondary"><svg class="i"><use href="#i-check"/></svg>Salvar</button>
       </div>
     </footer>
   </section>
