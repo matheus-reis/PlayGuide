@@ -372,6 +372,17 @@ input[type="date"].field { -webkit-appearance: none; appearance: none; color-sch
 }
 .list:not(:empty) + .empty { display: none; }
 
+.awake-warn {
+  margin: 0 var(--sp-4) var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--c-danger);
+  border-radius: var(--r-md);
+  background: var(--c-danger-soft);
+  font-size: var(--fs-sm);
+  color: var(--c-danger);
+}
+.awake-warn b { font-weight: var(--fw-semibold); }
+
 /* ---------- Repertório: nome e data ---------- */
 .meta { display: flex; gap: var(--sp-3); margin-top: var(--sp-2); }
 .meta__name { flex: 1; min-width: 0; }

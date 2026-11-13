@@ -394,20 +394,42 @@ function makeClock() {
   };
 }
 
-// Mantém a tela acesa enquanto toca
+// Mantém a tela acesa enquanto o prompter ou a gravação estiver aberto,
+// mesmo pausado ou trocando de música. Se o iPhone recusar, mostra um aviso.
 let wakeLock = null;
+let wantAwake = false;
+
+function updateAwakeWarning() {
+  const failed = wantAwake && !wakeLock;
+  document.querySelectorAll('.awake-warn').forEach((el) => el.classList.toggle('hidden', !failed));
+}
+
 async function keepAwake(on) {
+  wantAwake = on;
   try {
     if (on && !wakeLock && navigator.wakeLock) {
-      wakeLock = await navigator.wakeLock.request('screen');
-      wakeLock.addEventListener('release', () => { wakeLock = null; });
+      const lock = await navigator.wakeLock.request('screen');
+      if (!wantAwake) { lock.release(); return; } // saiu da tela enquanto pedia
+      wakeLock = lock;
+      lock.addEventListener('release', () => {
+        if (wakeLock === lock) wakeLock = null;
+        // o sistema soltou a trava com o app aberto: tenta de novo
+        if (wantAwake && document.visibilityState === 'visible') keepAwake(true);
+        else updateAwakeWarning();
+      });
     } else if (!on && wakeLock) {
-      await wakeLock.release();
+      const lock = wakeLock;
+      wakeLock = null;
+      await lock.release();
     }
-  } catch { /* não suportado */ }
+  } catch {
+    wakeLock = null;
+  }
+  updateAwakeWarning();
 }
+
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible' && (play.clock.running || rec.clock.running)) keepAwake(true);
+  if (document.visibilityState === 'visible' && wantAwake) keepAwake(true);
 });
 
 // ---------- Prompter ----------
@@ -422,6 +444,7 @@ function openPlayer(i) {
   $('#p-title').textContent = songs[i].title;
   updatePlayButton();
   show('v-play');
+  keepAwake(true);
   cancelAnimationFrame(play.raf);
   tick();
 }
@@ -492,7 +515,6 @@ function updatePlayButton() {
 function togglePlay() {
   if (play.clock.running) play.clock.pause();
   else play.clock.start();
-  keepAwake(play.clock.running);
   updatePlayButton();
 }
 
@@ -518,7 +540,6 @@ function sectionBack() {
 function changeSong(d) {
   const i = play.i + d;
   if (i < 0 || i >= songs.length) return;
-  keepAwake(false);
   openPlayer(i);
 }
 
@@ -528,7 +549,7 @@ $('#p-secback').onclick = sectionBack;
 $('#stage').onclick = sectionNext; // tocar na tela = próximo trecho
 $('#p-prevsong').onclick = () => changeSong(-1);
 $('#p-nextsong').onclick = () => changeSong(1);
-$('#p-reset').onclick = () => { play.clock.reset(); play.manual = null; play.shown = -1; keepAwake(false); updatePlayButton(); };
+$('#p-reset').onclick = () => { play.clock.reset(); play.manual = null; play.shown = -1; updatePlayButton(); };
 $('#p-back').onclick = () => {
   cancelAnimationFrame(play.raf);
   play.clock.pause();
@@ -548,6 +569,7 @@ function openRecorder(i) {
   $('#r-title').textContent = songs[i].title;
   renderRec();
   show('v-rec');
+  keepAwake(true);
   cancelAnimationFrame(rec.raf);
   recTick();
 }
@@ -583,7 +605,6 @@ $('#r-tap').onclick = () => {
   const last = rec.secs.length - 1;
   if (rec.idx < 0) {
     rec.clock.start();
-    keepAwake(true);
     rec.idx = 0;
     rec.secs[0].time = 0;
   } else if (rec.idx < last) {
