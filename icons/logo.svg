@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="3 5 446 98" fill="none" stroke="#fafafa" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Wordmark PlayGuide: traço único arredondado; o pingo do "i" é a deixa (verde) -->
+  <path d="M8 70V10H25a17 17 0 0 1 0 34H8"/>
+  <path d="M58 10V70"/>
+  <path d="M76 50a20 20 0 1 0 40 0a20 20 0 1 0-40 0M116 30V70"/>
+  <path d="M134 30V50a20 20 0 0 0 40 0M174 30V82a16 16 0 0 1-16 16H146"/>
+  <path d="M244.98 20.72A30 30 0 1 0 252 40H234"/>
+  <path d="M270 30V50a20 20 0 0 0 40 0M310 30V70"/>
+  <path d="M328 30V70"/>
+  <circle cx="328" cy="13" r="7" fill="#22c55e" stroke="none"/>
+  <path d="M346 50a20 20 0 1 0 40 0a20 20 0 1 0-40 0M386 10V70"/>
+  <path d="M404 50H444A20 20 0 1 0 438.14 64.14"/>
+</svg>

@@ -37,12 +37,27 @@
     <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></symbol>
     <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></symbol>
     <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+    <!-- Wordmark (mesmo desenho de icons/logo.svg) -->
+    <symbol id="logo" viewBox="3 5 446 98">
+      <g fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M8 70V10H25a17 17 0 0 1 0 34H8"/>
+        <path d="M58 10V70"/>
+        <path d="M76 50a20 20 0 1 0 40 0a20 20 0 1 0-40 0M116 30V70"/>
+        <path d="M134 30V50a20 20 0 0 0 40 0M174 30V82a16 16 0 0 1-16 16H146"/>
+        <path d="M244.98 20.72A30 30 0 1 0 252 40H234"/>
+        <path d="M270 30V50a20 20 0 0 0 40 0M310 30V70"/>
+        <path d="M328 30V70"/>
+        <path d="M346 50a20 20 0 1 0 40 0a20 20 0 1 0-40 0M386 10V70"/>
+        <path d="M404 50H444A20 20 0 1 0 438.14 64.14"/>
+      </g>
+      <circle cx="328" cy="13" r="7" style="fill: var(--c-accent)"/>
+    </symbol>
   </svg>
 
   <!-- Repertórios -->
   <section id="v-sets" class="view active">
     <header class="appbar">
-      <h1 class="appbar__title appbar__title--large">Repertórios</h1>
+      <h1 class="brand"><svg class="brand__logo" role="img" aria-label="PlayGuide"><use href="#logo"/></svg></h1>
       <button id="s-menu" class="btn btn--icon btn--ghost" aria-label="Mais opções"><svg class="i"><use href="#i-more"/></svg></button>
     </header>
     <div id="s-tools" class="toolbar hidden">
@@ -51,6 +66,7 @@
       <label class="btn btn--secondary btn--sm"><svg class="i"><use href="#i-upload"/></svg>Importar repertório<input id="s-import-set" type="file" hidden></label>
     </div>
     <div class="content">
+      <div class="section-head"><h2 class="section-title">Repertórios</h2></div>
       <ul id="sets" class="list"></ul>
       <div id="s-empty" class="empty">Nenhum repertório ainda.<br>Toque em <b>Novo repertório</b> para começar.</div>
     </div>

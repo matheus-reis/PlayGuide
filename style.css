@@ -138,13 +138,10 @@ button, input, label { font: inherit; color: inherit; }
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.appbar__title--large {
-  text-align: left;
-  font-size: var(--fs-2xl);
-  font-weight: var(--fw-bold);
-  letter-spacing: -.02em;
-  padding-left: var(--sp-1);
-}
+/* Wordmark no topo da tela inicial */
+.brand { flex: 1; margin: 0; padding-left: var(--sp-1); line-height: 0; }
+.brand__logo { width: 132px; height: 29px; color: var(--c-text); }
+.content > .section-head:first-child { margin-top: var(--sp-2); }
 .appbar__center { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; }
 .appbar__center .appbar__title { max-width: 100%; }
 .appbar__sub { font-size: var(--fs-xs); color: var(--c-text-3); font-variant-numeric: tabular-nums; }
