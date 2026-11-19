@@ -90,7 +90,7 @@ async function readFile(input) {
   const file = input.files[0];
   input.value = '';
   if (!file) return null;
-  return JSON.parse(await file.text());
+  return { name: file.name, text: await file.text() };
 }
 
 function show(id) {
@@ -145,6 +145,57 @@ function unpack(data) {
     if (data.type === 'song' && data.song) return { songs: [cleanSong(data.song)] };
   }
   throw new Error('formato inválido');
+}
+
+// Erro com mensagem que pode ir direto para o aviso
+function fail(msg) { return Object.assign(new Error(msg), { show: true }); }
+function importError(err) { toast(err.show ? err.message : 'Arquivo inválido.', true); }
+
+// Projeto do REAPER (.rpp): cada marcador vira um trecho.
+// Com regiões, cada região vira uma música (tempos contados do início dela) e o projeto vira um repertório.
+// Marcadores começando com "!" são de ação do REAPER e ficam de fora.
+const RPP_MARKER_RE = /^\s*MARKER\s+(\d+)\s+(-?[\d.]+)\s+("[^"]*"|'[^']*'|`[^`]*`|\S+)\s+(\d+)/;
+
+function parseRpp(text, fileName) {
+  const marks = [], regions = [], open = {};
+  for (const line of text.split(/\r?\n/)) {
+    const m = line.match(RPP_MARKER_RE);
+    if (!m) continue;
+    const [, id, pos, raw, flags] = m;
+    const name = /^["'`]/.test(raw) ? raw.slice(1, -1).trim() : raw;
+    if (+flags & 1) { // região: uma linha no início e outra no fim, com o mesmo número
+      if (open[id]) { regions.push({ ...open[id], end: +pos }); delete open[id]; }
+      else open[id] = { name, start: +pos };
+    } else if (!name.startsWith('!')) {
+      marks.push({ name, time: +pos });
+    }
+  }
+  marks.sort((a, b) => a.time - b.time);
+  regions.sort((a, b) => a.start - b.start);
+
+  const toSong = (title, start, end) => {
+    const sections = marks
+      .filter((k) => k.time >= start && k.time < end)
+      .map((k) => ({
+        time: Math.max(0, Math.floor(k.time - start + 0.01)), // folga para arredondamento de ponto flutuante
+        label: k.name ? k.name[0].toUpperCase() + k.name.slice(1) : '…',
+      }));
+    if (sections.length && sections[0].time > 0) sections.unshift({ time: 0, label: 'Início' });
+    return { title: title || 'Sem título', sections };
+  };
+
+  const projectName = fileName.replace(/\.rpp$/i, '');
+  if (regions.length) {
+    return { sets: [{ title: projectName, date: '', songs: regions.map((r) => toSong(r.name, r.start, r.end)) }] };
+  }
+  if (!marks.length) throw fail('Nenhum marcador encontrado no projeto do REAPER.');
+  return { songs: [toSong(projectName, 0, Infinity)] };
+}
+
+// Lê qualquer arquivo aceito na importação (JSON do PlayGuide ou projeto do REAPER)
+function unpackFile({ name, text }) {
+  if (/\.rpp$/i.test(name)) return parseRpp(text, name);
+  return unpack(JSON.parse(text));
 }
 
 function plural(n, one, many) { return `${n} ${n === 1 ? one : many}`; }
@@ -238,8 +289,9 @@ $('#s-export').onclick = () => saveFile(`playguide-${today()}.json`, sets);
 // Backup substitui tudo
 $('#s-import').onchange = async (e) => {
   try {
-    const data = await readFile(e.target);
-    if (!data) return;
+    const f = await readFile(e.target);
+    if (!f) return;
+    const data = JSON.parse(f.text);
     if (!Array.isArray(data)) throw new Error('não é backup');
     sets = cleanSets(data);
     save();
@@ -250,21 +302,21 @@ $('#s-import').onchange = async (e) => {
   }
 };
 
-// Repertório (ou backup) é somado aos que já existem
+// Repertório (ou backup, ou projeto do REAPER com regiões) é somado aos que já existem
 $('#s-import-set').onchange = async (e) => {
   try {
-    const data = await readFile(e.target);
-    if (!data) return;
-    const got = unpack(data);
-    if (!got.sets) { toast('Este arquivo é de uma música. Abra um repertório e use Importar música.', true); return; }
+    const f = await readFile(e.target);
+    if (!f) return;
+    const got = unpackFile(f);
+    if (!got.sets) { toast('Este arquivo traz uma música só. Abra um repertório e use Importar música.', true); return; }
     sets.push(...got.sets);
     save();
     $('#s-tools').classList.add('hidden');
     if (got.sets.length === 1) openSet(sets.length - 1);
     else renderSets();
     toast(`Importado: ${plural(got.sets.length, 'repertório', 'repertórios')}`);
-  } catch {
-    toast('Arquivo inválido.', true);
+  } catch (err) {
+    importError(err);
   }
 };
 
@@ -291,17 +343,17 @@ $('#l-export').onclick = () => {
 // Música avulsa entra no fim do repertório; arquivo de repertório traz todas as músicas dele
 $('#l-import').onchange = async (e) => {
   try {
-    const data = await readFile(e.target);
-    if (!data) return;
-    const got = unpack(data);
+    const f = await readFile(e.target);
+    if (!f) return;
+    const got = unpackFile(f);
     const added = got.songs || got.sets.flatMap((s) => s.songs);
     songs.push(...added);
     save();
     renderList();
     $('#l-tools').classList.add('hidden');
     toast(added.length ? `Importado: ${plural(added.length, 'música', 'músicas')}` : 'Nenhuma música no arquivo.', !added.length);
-  } catch {
-    toast('Arquivo inválido.', true);
+  } catch (err) {
+    importError(err);
   }
 };
 

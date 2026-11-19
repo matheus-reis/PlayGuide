@@ -1,5 +1,5 @@
 // Troque a versão ao publicar mudanças para forçar a atualização no iPhone.
-const CACHE = 'playguide-v5';
+const CACHE = 'playguide-v6';
 const FILES = [
   './',
   'index.html',
