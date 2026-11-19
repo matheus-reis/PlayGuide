@@ -485,6 +485,28 @@ input[type="date"].field { -webkit-appearance: none; appearance: none; color-sch
 .rec-item.is-done .rec-item__time { color: var(--c-accent); }
 .rec-item.is-now { background: var(--c-accent-soft); color: var(--c-accent); font-weight: var(--fw-bold); }
 
+/* ---------- Aviso rápido ---------- */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(96px + env(safe-area-inset-bottom));
+  z-index: 10;
+  max-width: calc(100% - 2 * var(--sp-4));
+  padding: var(--sp-2) var(--sp-4);
+  border: 1px solid var(--c-border-strong);
+  border-radius: var(--r-pill);
+  background: var(--c-surface-2);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 8px);
+  transition: opacity .2s var(--ease), transform .2s var(--ease);
+}
+.toast.is-on { opacity: 1; transform: translate(-50%, 0); }
+.toast--error { border-color: var(--c-danger); color: var(--c-danger); }
+
 /* ---------- Paisagem no celular ---------- */
 @media (orientation: landscape) and (max-height: 500px) {
   .stage { gap: var(--sp-2); }

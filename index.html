@@ -48,6 +48,7 @@
     <div id="s-tools" class="toolbar hidden">
       <button id="s-export" class="btn btn--secondary btn--sm"><svg class="i"><use href="#i-download"/></svg>Exportar backup</button>
       <label class="btn btn--secondary btn--sm"><svg class="i"><use href="#i-upload"/></svg>Importar backup<input id="s-import" type="file" accept="application/json,.json" hidden></label>
+      <label class="btn btn--secondary btn--sm"><svg class="i"><use href="#i-upload"/></svg>Importar repertório<input id="s-import-set" type="file" accept="application/json,.json" hidden></label>
     </div>
     <div class="content">
       <ul id="sets" class="list"></ul>
@@ -67,6 +68,8 @@
     </header>
     <div id="l-tools" class="toolbar hidden">
       <button id="l-dup" class="btn btn--secondary btn--sm"><svg class="i"><use href="#i-copy"/></svg>Duplicar</button>
+      <button id="l-export" class="btn btn--secondary btn--sm"><svg class="i"><use href="#i-download"/></svg>Exportar repertório</button>
+      <label class="btn btn--secondary btn--sm"><svg class="i"><use href="#i-upload"/></svg>Importar música<input id="l-import" type="file" accept="application/json,.json" hidden></label>
       <button id="l-del" class="btn btn--danger btn--sm"><svg class="i"><use href="#i-trash"/></svg>Excluir repertório</button>
     </div>
     <div class="content">
@@ -103,6 +106,7 @@
     </div>
     <footer class="footer">
       <button id="e-del" class="btn btn--danger"><svg class="i"><use href="#i-trash"/></svg>Excluir</button>
+      <button id="e-export" class="btn btn--secondary btn--icon" aria-label="Exportar música"><svg class="i"><use href="#i-download"/></svg></button>
       <button id="e-rec" class="btn btn--secondary btn--grow"><svg class="i i--rec"><use href="#i-record"/></svg>Gravar tempos</button>
     </footer>
   </section>
@@ -158,6 +162,8 @@
       </div>
     </footer>
   </section>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <script src="app.js"></script>
 </body>

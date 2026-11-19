@@ -54,6 +54,45 @@ function confirmTap(btn, action) {
   setTimeout(() => { delete btn.dataset.confirm; btn.innerHTML = html; }, 2500);
 }
 
+let toastTimer = 0;
+function toast(msg, error = false) {
+  const el = $('#toast');
+  el.textContent = msg;
+  el.classList.toggle('toast--error', error);
+  el.classList.add('is-on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('is-on'), 2800);
+}
+
+// "Cantata de Natal" -> "cantata-de-natal"
+function slug(s) {
+  return String(s).normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'sem-nome';
+}
+
+// No celular abre o menu de compartilhar (WhatsApp, Arquivos…); no computador baixa o arquivo.
+async function saveFile(name, data) {
+  const json = JSON.stringify(data, null, 2);
+  const file = new File([json], name, { type: 'application/json' });
+  const touch = matchMedia('(pointer: coarse)').matches;
+  if (touch && navigator.canShare && navigator.canShare({ files: [file] })) {
+    try { await navigator.share({ files: [file] }); return; }
+    catch (e) { if (e.name === 'AbortError') return; }
+  }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(file);
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+async function readFile(input) {
+  const file = input.files[0];
+  input.value = '';
+  if (!file) return null;
+  return JSON.parse(await file.text());
+}
+
 function show(id) {
   document.querySelectorAll('.view').forEach((v) => v.classList.toggle('active', v.id === id));
 }
@@ -92,6 +131,23 @@ function cleanSets(data) {
   if (data.length && !Array.isArray(data[0].songs)) data = [{ title: 'Minhas músicas', date: today(), songs: data }];
   return data.map((s) => ({ title: String(s.title || ''), date: String(s.date || ''), songs: (s.songs || []).map(cleanSong) }));
 }
+
+// Arquivos de troca: { app: 'playguide', type: 'song', song } ou { app: 'playguide', type: 'set', set }.
+// O backup completo continua sendo a lista de repertórios pura.
+function packSong(song) { return { app: 'playguide', type: 'song', song }; }
+function packSet(set) { return { app: 'playguide', type: 'set', set }; }
+
+// Lê qualquer arquivo do PlayGuide e devolve { sets } ou { songs }
+function unpack(data) {
+  if (Array.isArray(data)) return { sets: cleanSets(data) };
+  if (data && data.app === 'playguide') {
+    if (data.type === 'set' && data.set && Array.isArray(data.set.songs)) return { sets: cleanSets([data.set]) };
+    if (data.type === 'song' && data.song) return { songs: [cleanSong(data.song)] };
+  }
+  throw new Error('formato inválido');
+}
+
+function plural(n, one, many) { return `${n} ${n === 1 ? one : many}`; }
 
 function load() {
   try {
@@ -177,26 +233,39 @@ $('#s-new').onclick = () => {
 
 $('#s-menu').onclick = () => $('#s-tools').classList.toggle('hidden');
 
-$('#s-export').onclick = () => {
-  const blob = new Blob([JSON.stringify(sets, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `playguide-${today()}.json`;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-};
+$('#s-export').onclick = () => saveFile(`playguide-${today()}.json`, sets);
 
+// Backup substitui tudo
 $('#s-import').onchange = async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
   try {
-    sets = cleanSets(JSON.parse(await file.text()));
+    const data = await readFile(e.target);
+    if (!data) return;
+    if (!Array.isArray(data)) throw new Error('não é backup');
+    sets = cleanSets(data);
     save();
     renderSets();
+    toast(`Backup restaurado: ${plural(sets.length, 'repertório', 'repertórios')}`);
   } catch {
-    $('#s-empty').textContent = 'Arquivo de backup inválido.';
+    toast('Arquivo de backup inválido.', true);
   }
-  e.target.value = '';
+};
+
+// Repertório (ou backup) é somado aos que já existem
+$('#s-import-set').onchange = async (e) => {
+  try {
+    const data = await readFile(e.target);
+    if (!data) return;
+    const got = unpack(data);
+    if (!got.sets) { toast('Este arquivo é de uma música. Abra um repertório e use Importar música.', true); return; }
+    sets.push(...got.sets);
+    save();
+    $('#s-tools').classList.add('hidden');
+    if (got.sets.length === 1) openSet(sets.length - 1);
+    else renderSets();
+    toast(`Importado: ${plural(got.sets.length, 'repertório', 'repertórios')}`);
+  } catch {
+    toast('Arquivo inválido.', true);
+  }
 };
 
 // ---------- Músicas do repertório ----------
@@ -212,6 +281,28 @@ $('#l-dup').onclick = () => {
   save();
   openSet(sets.length - 1);
   $('#l-title').focus();
+};
+
+$('#l-export').onclick = () => {
+  const s = sets[setIdx];
+  saveFile(`repertorio-${slug(s.title)}${s.date ? `-${s.date}` : ''}.json`, packSet(s));
+};
+
+// Música avulsa entra no fim do repertório; arquivo de repertório traz todas as músicas dele
+$('#l-import').onchange = async (e) => {
+  try {
+    const data = await readFile(e.target);
+    if (!data) return;
+    const got = unpack(data);
+    const added = got.songs || got.sets.flatMap((s) => s.songs);
+    songs.push(...added);
+    save();
+    renderList();
+    $('#l-tools').classList.add('hidden');
+    toast(added.length ? `Importado: ${plural(added.length, 'música', 'músicas')}` : 'Nenhuma música no arquivo.', !added.length);
+  } catch {
+    toast('Arquivo inválido.', true);
+  }
 };
 
 $('#l-del').onclick = () => confirmTap($('#l-del'), () => {
@@ -375,6 +466,13 @@ $('#e-del').onclick = () => confirmTap($('#e-del'), () => {
   renderList();
   show('v-list');
 });
+
+$('#e-export').onclick = () => {
+  commitEditor();
+  if (editing < 0) { toast('Dê um nome ou adicione trechos antes de exportar.', true); return; }
+  const song = songs[editing];
+  saveFile(`musica-${slug(song.title)}.json`, packSong(song));
+};
 
 $('#e-rec').onclick = () => {
   if (!draft.length) return;
